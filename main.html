@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather App with Google Maps</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weather App with Google Maps</h1>
+    <div id="map"></div>
+
+    <script>
+        // Replace 'YOUR_WEATHER_API_KEY' with your actual weather API key
+        const weatherApiKey = '';
+        let map;
+
+        function initMap() {
+            // Create the map centered on a default location
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 37.7749, lng: -122.4194 },
+                zoom: 8
+            });
+
+            // Fetch the user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        const userLocation = { lat: latitude, lng: longitude };
+
+                        // Center the map on the user's location
+                        map.setCenter(userLocation);
+
+                        // Fetch weather data for the user's location
+                        fetchWeatherData(userLocation);
+                    },
+                    error => {
+                        console.error(error);
+                        alert('Unable to retrieve your location. Please enable location access.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function fetchWeatherData(location) {
+            // Make a request to the weather API
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lng}&appid=${weatherApiKey}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Extract relevant weather information from the response
+                    const temperature = data.main.temp;
+                    const humidity = data.main.humidity;
+                    const weatherDescription = data.weather[0].description;
+
+                    // Display the weather information
+                    const weatherInfo = `Temperature: ${temperature} K<br>Humidity: ${humidity}%<br>Description: ${weatherDescription}`;
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: weatherInfo
+                    });
+                    const marker = new google.maps.Marker({
+                        position: location,
+                        map: map,
+                        title: 'Weather Info'
+                    });
+                    marker.addListener('click', function () {
+                        infoWindow.open(map, marker);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Unable to fetch weather data. Please try again later.');
+                });
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+</body>
+</html>
